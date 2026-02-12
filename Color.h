@@ -1,0 +1,15 @@
+#pragma once
+
+#define	COLOR_RED 0xff0000
+#define COLOR_GREEN 0x00ff00
+#define COLOR_LIGHTBLUE 0x0088ff
+#define COLOR_BLUE 0x0000ff
+#define COLOR_WHITE 0xffffff
+
+const int color[] = {
+	COLOR_RED,COLOR_GREEN,COLOR_LIGHTBLUE,COLOR_BLUE,COLOR_WHITE
+};
+
+enum {
+	RED,GREEN,LIGHTBLUE,BLUE,WHITE
+};
