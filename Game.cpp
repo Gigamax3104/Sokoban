@@ -1,187 +1,172 @@
-#include	"DxLib.h"
-#include	"math.h"
+#include	<stdio.h>
+#include	<DxLib.h>
+#include	<math.h>
 #include	"Color.h"
 #include	"Class.h"
 #include	"Variable.h"
 
-Game::Game() {
-	playerSpeed = 1;
-	savePlayerSpeed = playerSpeed;
-	boxSpeed = 3;
+bool Game::Start() {
+	switch (state) {
+	case TITLE:
+		if (BG_MS_Flag[TITLE]) {
+			PlaySoundMem(BG_MS[TITLE], DX_PLAYTYPE_LOOP);
+			BG_MS_Flag[TITLE] = false;
+		}
 
-	line.x = (int)sqrt(DIVISION);
-	line.y = (int)sqrt(DIVISION);
+		Draw();
 
-	box = new Box[BOXSIZE];
-	point = new Circle[POINTSIZE];
+		if (CheckHitKey(KEY_INPUT_SPACE)) {
+			timer = 0;
 
-	player.pos.x = WIDTH / line.x / 2;
-	player.pos.y = HEIGHT / line.y / 2;
-	player.radius = 20;
-	player.color = color[RED];
+			StopSoundMem(BG_MS[TITLE]);
 
-	for (int i = 0; i < BOXSIZE; i++) {
-		box[i].pos.x = (WIDTH / line.x / 2) * (line.x - 1);
-		box[i].pos.y = HEIGHT / 2;
-		box[i].length.x = 50;
-		box[i].length.y = 50;
-		box[i].color = color[BLUE];
-		box[i].flag = false;
+			BG_MS_Flag[TITLE] = true;
+
+			state = GAME;
+		}
+
+		break;
+
+	case GAME:
+		if (BG_MS_Flag[BG_MS1]) {
+			ChangeVolumeSoundMem(128, BG_MS[BG_MS1]);
+			PlaySoundMem(BG_MS[BG_MS1], DX_PLAYTYPE_LOOP);
+			BG_MS_Flag[BG_MS1] = false;
+		}
+
+		for (int i = 0; i < (int)pow(boxSize[stage], 2); i++) {
+			if (m_point[i % boxSize[stage]].shape.pos.x == m_box[i / boxSize[stage]].pos.x && m_point[i % boxSize[stage]].shape.pos.y == m_box[i / boxSize[stage]].pos.y) {
+				for (int j = 0; j < boxSize[stage]; j++) if (m_point[j].inputFlag) m_point[j].inputFlag = false;
+
+				for (int j = 0; j < i; j++)
+					if (m_point[j % boxSize[stage]].shape.pos.x == m_box[j / boxSize[stage]].pos.x && m_point[j % boxSize[stage]].shape.pos.y == m_box[j / boxSize[stage]].pos.y)
+						m_point[j % boxSize[stage]].inputFlag = true;
+
+				m_point[i % boxSize[stage]].inputFlag = true;
+
+				m_box[i / boxSize[stage]].color = color[LIGHTBLUE];
+
+				i = (i / boxSize[stage] + 1) * boxSize[stage] - 1;
+
+				m_box[i / boxSize[stage]].pointerSavePos.x = m_point[i % boxSize[stage]].shape.pos.x;
+				m_box[i / boxSize[stage]].pointerSavePos.y = m_point[i % boxSize[stage]].shape.pos.y;
+
+				if (m_box[i / boxSize[stage]].SE_Flag[INSERT]) {
+					StopSoundMem(m_box[i / boxSize[stage]].SE[INSERT]);
+
+					PlaySoundMem(m_box[i / boxSize[stage]].SE[INSERT], DX_PLAYTYPE_BACK);
+
+					m_box[i / boxSize[stage]].SE_Flag[INSERT] = false;
+				}
+			}
+			else {
+				for (int j = 0; j < (int)pow(boxSize[stage], 2); j++) {
+					if (m_point[j % boxSize[stage]].shape.pos.x == m_box[j / boxSize[stage]].pos.x && m_point[j % boxSize[stage]].shape.pos.y == m_box[j / boxSize[stage]].pos.y)
+						break;
+
+					if (j == (int)pow(boxSize[stage], 2) - 1) m_point[i % boxSize[stage]].inputFlag = false;
+				}
+
+				for (int j = 0; j < boxSize[stage]; j++) if (m_point[j].inputFlag) m_point[j].inputFlag = true;
+
+				if (m_point[i % boxSize[stage]].inputFlag) continue;
+
+				m_point[i % boxSize[stage]].inputFlag = false;
+
+				if (m_box[i / boxSize[stage]].pointerSavePos.x != NULL
+					&& m_point[i % boxSize[stage]].shape.pos.x == m_box[i / boxSize[stage]].pointerSavePos.x
+					&& m_point[i % boxSize[stage]].shape.pos.y == m_box[i / boxSize[stage]].pointerSavePos.y) {
+					m_box[i / boxSize[stage]].SE_Flag[INSERT] = true;
+				}
+
+				m_box[i / boxSize[stage]].color = color[BLUE];
+			}
+		}
+
+		Move();
+
+		SetDrawScreen(DX_SCREEN_BACK);
+		Draw();
+
+		for (int i = 0; i < boxSize[stage]; i++) {
+			if (!m_point[i].inputFlag) break;
+			else if (i == boxSize[stage] - 1) {
+				for(int j = 0; j < boxSize[stage]; j++)
+				while (CheckSoundMem(m_box[j].SE[INSERT])) {
+					//
+				}
+
+				//state = RESULT;
+
+				if (stage < STAGE_5) {
+					Delete();
+					stage++;
+				}
+				else {
+					while (CheckHitKey(KEY_INPUT_RETURN)) {
+
+					}
+
+					return false;
+				}
+
+				New();
+			}
+		}
+		break;
+
+	case Error:
+		Draw();
+		break;
 	}
 
-	for (int i = 0; i < POINTSIZE; i++) {
-		point[i].pos.x = WIDTH / 2;
-		point[i].pos.y = HEIGHT / 2;
-		point[i].radius = 10;
-		point[i].color = color[GREEN];
-	}
-}
-
-void Game::Start() {
-	Move();
-	Draw();
+	return true;
 }
 
 void Game::Move() {
-	if(CheckHitKey(KEY_INPUT_A) || CheckHitKey(KEY_INPUT_LEFT)) Judge(Horizontal, OPPOSITION);
+	if(CheckHitKey(KEY_INPUT_A) || CheckHitKey(KEY_INPUT_LEFT))Judge(Horizontal, OPPOSITION);
 
-	if(CheckHitKey(KEY_INPUT_D) || CheckHitKey(KEY_INPUT_RIGHT)) Judge(Horizontal, NORMAL);
+	else if(CheckHitKey(KEY_INPUT_D) || CheckHitKey(KEY_INPUT_RIGHT)) Judge(Horizontal, NORMAL);
 
-	if(CheckHitKey(KEY_INPUT_W) || CheckHitKey(KEY_INPUT_UP)) Judge(Vertical, OPPOSITION);
+	else if(CheckHitKey(KEY_INPUT_W) || CheckHitKey(KEY_INPUT_UP)) Judge(Vertical, OPPOSITION);
 
-	if(CheckHitKey(KEY_INPUT_S) || CheckHitKey(KEY_INPUT_DOWN)) Judge(Vertical, NORMAL);
-}
+	else if(CheckHitKey(KEY_INPUT_S) || CheckHitKey(KEY_INPUT_DOWN)) Judge(Vertical, NORMAL);
 
-void Game::Judge(bool direction, int value) {
-	if (direction) { //左右を押された時
-		//if ((pow(player.pos.x + playerSpeed * value - box.pos.x, 2) <= pow(player.radius + box.length.x / 2, 2)
-		//	&& pow(player.pos.y - box.pos.y, 2) <= pow(player.radius + box.length.y / 2, 2)) //円と矩形の当たり判定(当たっている)
-		//	&& (box.pos.x + boxSpeed * value > box.length.x / 2 && box.pos.x + boxSpeed * value < WIDTH - box.length.x / 2) //矩形のx軸の移動制限
-		//	&& !box.flag) {  //ポイント部分にハマってない時
-		int save = player.pos.x;
-		
-		while ((value == OPPOSITION && player.pos.x > save + (WIDTH / line.x) * value)
-			|| (value == NORMAL && player.pos.x < save + (WIDTH / line.x) * value)) {
-			player.pos.x += playerSpeed * value;
+	CheckHitKey(KEY_INPUT_R) ? key++ : key = 0;
 
-			if ((value == OPPOSITION && player.pos.x < save + (WIDTH / line.x) * value)
-				|| (value == NORMAL && player.pos.x > save + (WIDTH / line.x) * value))
-				player.pos.x = save + (WIDTH / line.x) * value;
-
-			ClearDrawScreen();
-
-			Draw();
-
-			ScreenFlip();
-		}
-
-		//playerSpeed = boxSpeed;
-		//player.pos.x += playerSpeed * value;
-		//box.pos.x += boxSpeed * value;
-
-		//if (pow(box.pos.x - point.pos.x,2) + pow(box.pos.y - point.pos.y,2) <= pow(point.radius,2)) {
-		//	box.pos = point.pos;
-		//	player.pos.x = box.pos.x + box.length.x / 2 * value;
-		//	box.color = color[LIGHTBLUE];
-		//	box.flag = true;
-		//}
-
-		//playerSpeed = savePlayerSpeed;
-
-	//}
-//	if (pow(player.pos.x + playerSpeed * value - box.pos.x, 2) <= pow(player.radius + box.length.x / 2, 2)
-//		&& pow(player.pos.y - box.pos.y, 2) <= pow(player.radius + box.length.y / 2, 2) //円と矩形の当たり判定(当たっている)
-//		&& (box.pos.x + boxSpeed * value > box.length.x / 2 && box.pos.x + boxSpeed * value < WIDTH - box.length.x / 2)//矩形のx軸の移動制限
-//		&& box.flag){ //ポイント部分にハマっている時
-//		playerSpeed = boxSpeed;
-//		player.pos.x += playerSpeed * value;
-//		box.pos.x += boxSpeed * value;
-
-//		box.color = color[BLUE];
-//		playerSpeed = savePlayerSpeed;
-//	}
-//	else if (player.pos.x + playerSpeed * value > player.radius && player.pos.x + playerSpeed * value < WIDTH - player.radius //円のx軸の移動制限
-//		&& !(pow(player.pos.x + playerSpeed * value - box.pos.x, 2) <= pow(player.radius + box.length.x / 2, 2)
-//			&& pow(player.pos.y - box.pos.y, 2) <= pow(player.radius + box.length.y / 2, 2))) { //円と矩形の当たり判定(当たっていない)
-//		box.flag = false;
-//		player.pos.x += playerSpeed * value;
-//	}
+	if (key == 1) {
+		Reset();
 	}
-	else { //上下を押された時
-		int save = player.pos.y;
+}
 
-		while ((value == OPPOSITION && player.pos.y > save + (HEIGHT / line.y) * value)
-			|| (value == NORMAL && player.pos.y < save + (HEIGHT / line.y) * value)) {
+void Game::Reset() {
+	m_player.shape.pos.x = m_player.resetPos.x;
+	m_player.shape.pos.y = m_player.resetPos.y;
 
-			player.pos.y += playerSpeed * value;
-			if ((value == OPPOSITION && player.pos.y < save + (HEIGHT / line.y) * value)
-				|| (value == NORMAL && player.pos.y > save + (HEIGHT / line.y) * value))
-				player.pos.y = save + (HEIGHT / line.y) * value;
+	m_player.speed.x = m_player.saveSpeed.x;
+	m_player.speed.y = m_player.saveSpeed.y;
 
-			ClearDrawScreen();
+	m_player.flag[BOXCOLLISION] = false;
+	m_player.flag[WALLCOLLISION] = false;
+	m_player.flag[COURSE] = false;
 
-			Draw();
+	for (int i = 0; i < boxSize[stage]; i++) {
+		m_box[i].pos.x = m_box[i].resetPos.x;
+		m_box[i].pos.y = m_box[i].resetPos.y;
 
-			ScreenFlip();
-		}
+		m_box[i].flag[PLAYERCOLLISION] = false;
+		m_box[i].flag[BOX_BOXCOLLISION] = false;
+		m_box[i].flag[COURSE] = false;
+		m_box[i].flag[INPUT] = false;
 
-//	if ((pow(player.pos.x - box.pos.x, 2) <= pow(player.radius + box.length.x / 2, 2)
-//		&& pow(player.pos.y + playerSpeed * value - box.pos.y, 2) <= pow(player.radius + box.length.y / 2, 2)) //円と矩形の当たり判定(当たっている)
-//		&& (box.pos.y + boxSpeed * value > box.length.y / 2 && box.pos.y + boxSpeed * value < HEIGHT - box.length.y / 2) //矩形のy軸の移動制限
-//		&& !box.flag) {
-//		playerSpeed = boxSpeed;
-//		player.pos.y += playerSpeed * value;
-//		box.pos.y += boxSpeed * value;
+		for (int j = 0; j < INSERT + 1; j++) m_box[i].SE_Flag[j] = true;
 
-//		if (pow(box.pos.x - point.pos.x, 2) + pow(box.pos.y - point.pos.y, 2) <= pow(point.radius, 2)) {
-//			box.pos = point.pos;
-//			box.color = color[LIGHTBLUE];
-//			box.flag = true;
-//		}
+		m_wall_Save[i].pos.x = NULL;
+		m_wall_Save[i].pos.y = NULL;
 
-//		playerSpeed = savePlayerSpeed;
+		m_wall_Save[i].length.x = NULL;
+		m_wall_Save[i].length.y = NULL;
 
-//	}
-//	else if ((pow(player.pos.x - box.pos.x, 2) <= pow(player.radius + box.length.x / 2, 2)
-//		&& pow(player.pos.y + playerSpeed * value - box.pos.y, 2) <= pow(player.radius + box.length.y / 2, 2)) //円と矩形の当たり判定(当たっている)
-//		&& (box.pos.y + boxSpeed * value > box.length.y / 2 && box.pos.y + boxSpeed * value < HEIGHT - box.length.y / 2) //矩形のy軸の移動制限
-//		&& box.flag) {
-//			playerSpeed = boxSpeed;
-//			player.pos.y += playerSpeed * value;
-//			box.pos.y += boxSpeed * value;
-
-//			box.color = color[BLUE];
-//			playerSpeed = savePlayerSpeed;
-//		 }
-//	else if (player.pos.y + playerSpeed * value > player.radius && player.pos.y + playerSpeed * value < HEIGHT - player.radius //円のy軸の移動制限
-//		&& !(pow(player.pos.x - box.pos.x, 2) <= pow(player.radius + box.length.x / 2, 2)
-//			&& pow(player.pos.y + playerSpeed * value - box.pos.y, 2) <= pow(player.radius + box.length.y / 2, 2))) { //円と矩形の当たり判定(当たっていない)
-//		box.flag = false;
-//		player.pos.y += playerSpeed * value;
-//	}
+		m_wall_Save[i].flag = false;
 	}
-
-}
-
-void Game::Draw() {
-	for (int i = 0; i < line.x; i++) if (i != 0) DrawLine(0, i * (HEIGHT / line.y), WIDTH, i * (HEIGHT / line.y), color[WHITE]);
-	for (int i = 0; i < line.y; i++) if (i != 0) DrawLine(i * (WIDTH / line.x), 0, i * (WIDTH / line.x), HEIGHT, color[WHITE]);
-
-	//DrawFormatString(0, 0, color[WHITE], "%d", (int)(pow(point.radius,2)));
-	//DrawFormatString(0, 20, color[WHITE], "%d", (int)(pow(box.pos.x - point.pos.x, 2) + pow(box.pos.y - point.pos.y, 2)));
-	DrawFormatString(0, 0, color[WHITE], "%d", WIDTH / line.x / 2);
-	for (int i = 0; i < POINTSIZE; i++) DrawCircle(point[i].pos.x, point[i].pos.y, point[i].radius, point[i].color, TRUE);
-
-	DrawCircle(player.pos.x, player.pos.y, player.radius, player.color, TRUE);
-
-	for (int i = 0; i < BOXSIZE; i++) DrawBox(box[i].pos.x - box[i].length.x / 2, box[i].pos.y - box[i].length.y / 2,
-		box[i].pos.x + box[i].length.x / 2, box[i].pos.y + box[i].length.y / 2, box[i].color, TRUE);
-}
-
-Game::~Game() {
-	delete[] box;
-	box = nullptr;
-
-	delete[] point;
-	point = nullptr;
 }
