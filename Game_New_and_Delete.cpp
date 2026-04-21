@@ -207,7 +207,7 @@ void Game::FileOpen() {
 
 		m_box[i].distance = new double[BOX + 1];
 
-		m_box[i].flagSize = WALLCOLLISION;
+		m_box[i].flagSize = MOVE + 1;
 		m_box[i].flag = new bool[m_box[i].flagSize];
 
 		m_box[i].length.x = WIDTH / m_line[stage].x;
@@ -224,6 +224,7 @@ void Game::FileOpen() {
 		m_box[i].flag[BOX_BOXCOLLISION] = false;
 		m_box[i].flag[COURSE] = false;
 		m_box[i].flag[INPUT] = false;
+		m_box[i].flag[MOVE] = false;
 
 		for (int j = 0; j < INSERT + 1; j++) {
 			m_box[i].SE[j] = LoadSoundMem(SE_Name[j]);
@@ -348,7 +349,7 @@ void Game::New() {
 
 		m_box[i].distance = new double[BOX + 1];
 
-		m_box[i].flagSize = WALLCOLLISION;
+		m_box[i].flagSize = MOVE + 1;
 		m_box[i].flag = new bool[m_box[i].flagSize];
 
 		m_box[i].length.x = WIDTH / m_line[stage].x;
@@ -365,6 +366,7 @@ void Game::New() {
 		m_box[i].flag[BOX_BOXCOLLISION] = false;
 		m_box[i].flag[COURSE] = false;
 		m_box[i].flag[INPUT] = false;
+		m_box[i].flag[MOVE] = false;
 
 		for (int j = 0; j < INSERT + 1; j++) {
 			m_box[i].SE[j] = LoadSoundMem(SE_Name[j]);
