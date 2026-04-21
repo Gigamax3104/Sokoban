@@ -12,11 +12,15 @@ const char* dataName[] = {
 };
 
 const char* BG_IGName[] = {
-	"IMG/Title.jpg","IMG/BG_IG1.jpg"
+	"IMG/BG/Title.jpg","IMG/BG/BG_IG1.jpg"
 };
 
+const char* BOX_IGName = "IMG/BOX/BOX.png";
+
+const char* WALL_IGName = "IMG/WALL/WALL.jpg";
+
 const char* musicName[] = {
-	"SOUND/Title.mp3","SOUND/BG1.mp3"
+	"SOUND/Title.mp3","SOUND/BG1.mp3","SOUND/CLEAR.mp3"
 };
 
 const char* SE_Name[] = {
@@ -27,6 +31,12 @@ Game::Game() {
 	m_data = new FILE * [W * (STAGE_5 + 1) + 1];
 	m_errorData = new const char* [W * (STAGE_5 + 1) + 1];
 
+	m_box_Data = new Vector2*[STAGE_5 + 1];
+
+	m_wall_DrawData = new int* [STAGE_5 + 1];
+
+	m_point_Data = new Vector2 * [STAGE_5 + 1];
+
 	m_line = new Vector2[STAGE_5 + 1];
 
 	boxSize = new int[STAGE_5 + 1];
@@ -34,20 +44,21 @@ Game::Game() {
 	wallSize = new int[STAGE_5 + 1];
 
 	m_player.score = new int[STEP + 1];
+	m_player.hiScore = new int[STEP + 1];
 
 	m_player.flagSize = WALLCOLLISION + 1;
 
 	BG_IG = new int[BG_IG1 + 1];
 	m_errorBG_IG = new const char* [BG_IG1 + 1];
 
-	BG_MS = new int[BG_MS1 + 1];
-	BG_MS_Flag = new bool[BG_MS1 + 1];
-	m_errorBG_MS = new const char*[BG_MS1 + 1];
+	BG_MS = new int[BG_MS2 + 1];
+	BG_MS_Flag = new bool[BG_MS2 + 1];
+	m_errorBG_MS = new const char*[BG_MS2 + 1];
 
-	m_errorSE = new const char* [BG_MS1 + 1];
+	m_errorSE = new const char* [INSERT + 1];
 
 	state = TITLE;
-	stage = STAGE_2;
+	stage = STAGE_1;
 
 	key = 0;
 	timer = 0;
@@ -69,8 +80,10 @@ Game::Game() {
 	m_player.flag[WALLCOLLISION] = false;
 	m_player.flag[COURSE] = false;
 
-	m_player.score[WALK] = 0;
-	m_player.score[STEP] = 0;
+	for (int i = 0; i < STEP + 1; i++) m_player.score[i] = 0;
+
+	m_player.hiScore[STEP] = 600;
+	m_player.hiScore[WALK] = 6000;
 
 	FileOpen();
 }
@@ -89,9 +102,16 @@ void Game::FileOpen() {
 		fscanf_s(m_data[S], "%d", &m_line[i].y);
 
 		wallSize[i] = m_line[i].x * m_line[i].y;
+
+		m_wall_DrawData[i] = new int[wallSize[i]];
 	}
 
-	for (int i = 0; i < STAGE_5 + 1; i++) fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + i], "%d", &boxSize[i]);
+	for (int i = 0; i < STAGE_5 + 1; i++) {
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + i], "%d", &boxSize[i]);
+
+		m_box_Data[i] = new Vector2[boxSize[i]];
+		m_point_Data[i] = new Vector2[boxSize[i]];
+	}
 
 	m_box = new Box[boxSize[stage]];
 
@@ -114,15 +134,67 @@ void Game::FileOpen() {
 
 	m_player.shape.radius = HEIGHT / m_line[stage].y / 4;
 
+	for (int i = 0; i < boxSize[STAGE_1]; i++) {
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_1], "%d", &m_box_Data[STAGE_1][i].x);
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_1], "%d", &m_box_Data[STAGE_1][i].y);
+
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_1], "%d", &m_point_Data[STAGE_1][i].x);
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_1], "%d", &m_point_Data[STAGE_1][i].y);
+	}
+
+	for (int i = 0; i < boxSize[STAGE_2]; i++) {
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_2], "%d", &m_box_Data[STAGE_2][i].x);
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_2], "%d", &m_box_Data[STAGE_2][i].y);
+
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_2], "%d", &m_point_Data[STAGE_2][i].x);
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_2], "%d", &m_point_Data[STAGE_2][i].y);
+	}
+
+	for (int i = 0; i < boxSize[STAGE_3]; i++) {
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_3], "%d", &m_box_Data[STAGE_3][i].x);
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_3], "%d", &m_box_Data[STAGE_3][i].y);
+
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_3], "%d", &m_point_Data[STAGE_3][i].x);
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_3], "%d", &m_point_Data[STAGE_3][i].y);
+	}
+
+	for (int i = 0; i < boxSize[STAGE_4]; i++) {
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_4], "%d", &m_box_Data[STAGE_4][i].x);
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_4], "%d", &m_box_Data[STAGE_4][i].y);
+
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_4], "%d", &m_point_Data[STAGE_4][i].x);
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_4], "%d", &m_point_Data[STAGE_4][i].y);
+	}
+
+	for (int i = 0; i < boxSize[STAGE_5]; i++) {
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_5], "%d", &m_box_Data[STAGE_5][i].x);
+		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + STAGE_5], "%d", &m_box_Data[STAGE_5][i].y);
+
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_5], "%d", &m_point_Data[STAGE_5][i].x);
+		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + STAGE_5], "%d", &m_point_Data[STAGE_5][i].y);
+	}
+
+	for (int i = 0; i < wallSize[STAGE_1]; i++)
+		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + STAGE_1], "%d", &m_wall_DrawData[STAGE_1][i]);
+
+	for (int i = 0; i < wallSize[STAGE_2]; i++)
+		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + STAGE_2], "%d", &m_wall_DrawData[STAGE_2][i]);
+
+	for (int i = 0; i < wallSize[STAGE_3]; i++)
+		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + STAGE_3], "%d", &m_wall_DrawData[STAGE_3][i]);
+
+	for (int i = 0; i < wallSize[STAGE_4]; i++)
+		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + STAGE_4], "%d", &m_wall_DrawData[STAGE_4][i]);
+
+	for (int i = 0; i < wallSize[STAGE_5]; i++)
+		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + STAGE_5], "%d", &m_wall_DrawData[STAGE_5][i]);
+
 	for (int i = 0; i < boxSize[stage]; i++) {
 		m_box[i].SE = new int[INSERT + 1];
 		m_box[i].SE_Flag = new bool[INSERT + 1];
 
-		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_box[i].posData.x);
-		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_box[i].posData.y);
-
-		m_box[i].pos.x = m_box[i].posData.x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
-		m_box[i].pos.y = m_box[i].posData.y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
+		m_box[i].pos.x = m_box_Data[stage][i].x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
+		m_box[i].pos.y = m_box_Data[stage][i].y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
 
 		m_box[i].savePos.x = m_box[i].pos.x;
 		m_box[i].savePos.y = m_box[i].pos.y;
@@ -161,11 +233,13 @@ void Game::FileOpen() {
 
 			m_box[i].SE_Flag[j] = true;
 		}
+
+		m_box[i].IMG = LoadGraph(BOX_IGName);
+
+		if (IntErrorCheck(m_box[i].IMG)) state = Error;
 	}
 
 	for (int i = 0; i < wallSize[stage]; i++) {
-		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_wall[i].drawData);
-
 		m_wall[i].pos.x = WIDTH / m_line[stage].x * (i % m_line[stage].x) + WIDTH / m_line[stage].x / 2;
 		m_wall[i].pos.y = HEIGHT / m_line[stage].y * (i / m_line[stage].x) + HEIGHT / m_line[stage].y / 2;
 
@@ -174,8 +248,12 @@ void Game::FileOpen() {
 
 		m_wall[i].color = color[LIGHTGRAY];
 
-		if (m_wall[i].drawData) m_wall[i].flag = true;
+		if (m_wall_DrawData[stage][i]) m_wall[i].flag = true;
 		else m_wall[i].flag = false;
+
+		m_wall[i].IMG = LoadGraph(WALL_IGName);
+
+		if (IntErrorCheck(m_wall[i].IMG)) state = Error;
 	}
 
 	for (int i = 0; i < boxSize[stage]; i++) {
@@ -189,11 +267,8 @@ void Game::FileOpen() {
 	}
 
 	for (int i = 0; i < boxSize[stage]; i++) {
-		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_point[i].posData.x);
-		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_point[i].posData.y);
-
-		m_point[i].shape.pos.x = m_point[i].posData.x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
-		m_point[i].shape.pos.y = m_point[i].posData.y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
+		m_point[i].shape.pos.x = m_point_Data[stage][i].x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
+		m_point[i].shape.pos.y = m_point_Data[stage][i].y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
 
 		m_point[i].shape.radius = HEIGHT / m_line[stage].y / 8;
 
@@ -212,7 +287,7 @@ void Game::FileOpen() {
 
 	for (int i = 0; i < INSERT + 1; i++) m_errorSE[i] = SE_Name[i];
 
-	for (int i = 0; i < BG_MS1 + 1; i++) {
+	for (int i = 0; i < BG_MS2 + 1; i++) {
 		BG_MS[i] = LoadSoundMem(musicName[i]);
 
 		if (IntErrorCheck(BG_MS[i])) state = Error;
@@ -226,6 +301,10 @@ void Game::FileOpen() {
 }
 
 void Game::Delete() {
+	for (int i = 0; i < boxSize[stage]; i++) DeleteGraph(m_box[i].IMG);
+
+	for (int i = 0; i < wallSize[stage]; i++) DeleteGraph(m_wall[i].IMG);
+
 	delete[] m_box;
 
 	delete[] m_point;
@@ -256,11 +335,8 @@ void Game::New() {
 		m_box[i].SE = new int[INSERT + 1];
 		m_box[i].SE_Flag = new bool[INSERT + 1];
 
-		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_box[i].posData.x);
-		fscanf_s(m_data[(B - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_box[i].posData.y);
-
-		m_box[i].pos.x = m_box[i].posData.x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
-		m_box[i].pos.y = m_box[i].posData.y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
+		m_box[i].pos.x = m_box_Data[stage][i].x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
+		m_box[i].pos.y = m_box_Data[stage][i].y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
 
 		m_box[i].savePos.x = m_box[i].pos.x;
 		m_box[i].savePos.y = m_box[i].pos.y;
@@ -299,11 +375,13 @@ void Game::New() {
 
 			m_box[i].SE_Flag[j] = true;
 		}
+
+		m_box[i].IMG = LoadGraph(BOX_IGName);
+
+		if (IntErrorCheck(m_box[i].IMG)) state = Error;
 	}
 
 	for (int i = 0; i < wallSize[stage]; i++) {
-		fscanf_s(m_data[(W - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_wall[i].drawData);
-
 		m_wall[i].pos.x = WIDTH / m_line[stage].x * (i % m_line[stage].x) + WIDTH / m_line[stage].x / 2;
 		m_wall[i].pos.y = HEIGHT / m_line[stage].y * (i / m_line[stage].x) + HEIGHT / m_line[stage].y / 2;
 
@@ -312,8 +390,12 @@ void Game::New() {
 
 		m_wall[i].color = color[LIGHTGRAY];
 
-		if (m_wall[i].drawData) m_wall[i].flag = true;
+		if (m_wall_DrawData[stage][i]) m_wall[i].flag = true;
 		else m_wall[i].flag = false;
+
+		m_wall[i].IMG = LoadGraph(WALL_IGName);
+
+		if (IntErrorCheck(m_wall[i].IMG)) state = Error;
 	}
 
 	for (int i = 0; i < boxSize[stage]; i++) {
@@ -327,11 +409,8 @@ void Game::New() {
 	}
 
 	for (int i = 0; i < boxSize[stage]; i++) {
-		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_point[i].posData.x);
-		fscanf_s(m_data[(PO - 1) * (STAGE_5 + 1) + 1 + stage], "%d", &m_point[i].posData.y);
-
-		m_point[i].shape.pos.x = m_point[i].posData.x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
-		m_point[i].shape.pos.y = m_point[i].posData.y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
+		m_point[i].shape.pos.x = m_point_Data[stage][i].x * WIDTH / m_line[stage].x - WIDTH / m_line[stage].x / 2;
+		m_point[i].shape.pos.y = m_point_Data[stage][i].y * HEIGHT / m_line[stage].y - HEIGHT / m_line[stage].y / 2;
 
 		m_point[i].shape.radius = HEIGHT / m_line[stage].y / 8;
 
@@ -350,11 +429,34 @@ Game::~Game() {
 	delete[] m_errorData;
 	m_errorData = nullptr;
 
+	for (int i = 0; i < STAGE_5 + 1; i++) {
+		delete[] m_box_Data[i];
+		m_box_Data[i] = nullptr;
+
+		delete[] m_wall_DrawData[i];
+		m_wall_DrawData[i] = nullptr;
+
+		delete[] m_point_Data[i];
+		m_point_Data[i] = nullptr;
+	}
+
+	delete[] m_box_Data;
+	m_box_Data = nullptr;
+
+	delete[] m_wall_DrawData;
+	m_wall_DrawData = nullptr;
+
+	delete[] m_point_Data;
+	m_point_Data = nullptr;
+
 	delete[] m_line;
 	m_line = nullptr;
 
 	delete[] m_player.score;
 	m_player.score = nullptr;
+
+	delete[] m_player.hiScore;
+	m_player.hiScore = nullptr;
 
 	delete[] m_player.flag;
 	m_player.flag = nullptr;
@@ -380,6 +482,8 @@ Game::~Game() {
 		delete[] m_box[i].SE_Flag;
 		m_box[i].SE_Flag = nullptr;
 	}
+
+	for (int i = 0; i < boxSize[stage]; i++) DeleteGraph(m_box[i].IMG);
 
 	delete[] boxSize;
 

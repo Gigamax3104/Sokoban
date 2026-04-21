@@ -20,8 +20,6 @@ bool Game::Start() {
 
 			StopSoundMem(BG_MS[TITLE]);
 
-			BG_MS_Flag[TITLE] = true;
-
 			state = GAME;
 		}
 
@@ -96,23 +94,64 @@ bool Game::Start() {
 					//
 				}
 
-				//state = RESULT;
-
 				if (stage < STAGE_5) {
 					Delete();
+
 					stage++;
+
+					New();
 				}
-				else {
-					while (CheckHitKey(KEY_INPUT_RETURN)) {
+				else state = RESULT;
 
-					}
-
-					return false;
-				}
-
-				New();
 			}
 		}
+		break;
+
+	case RESULT:
+		if (BG_MS_Flag[BG_MS2]) {
+			StopSoundMem(BG_MS[BG_MS1]);
+			PlaySoundMem(BG_MS[BG_MS2], DX_PLAYTYPE_BACK);
+			BG_MS_Flag[BG_MS2] = false;
+		}
+
+		Draw();
+
+		if (CheckHitKey(KEY_INPUT_R)) {
+			timer = 0;
+
+			Delete();
+
+			stage = STAGE_1;
+
+			New();
+
+			if (m_player.score[STEP] < m_player.hiScore[STEP]) m_player.hiScore[STEP] = m_player.score[STEP];
+			if (m_player.score[WALK] < m_player.hiScore[WALK]) m_player.hiScore[WALK] = m_player.score[WALK];
+
+			for (int i = 0; i < STEP + 1; i++) m_player.score[i] = 0;
+			for (int i = 0; i < BG_MS2 + 1; i++) BG_MS_Flag[i] = true;
+
+			state = GAME;
+		}
+		else if (CheckHitKey(KEY_INPUT_RETURN)) {
+			timer = 0;
+
+			Delete();
+
+			stage = STAGE_1;
+
+			New();
+
+			if (m_player.score[STEP] < m_player.hiScore[STEP]) m_player.hiScore[STEP] = m_player.score[STEP];
+			if (m_player.score[WALK] > m_player.hiScore[WALK]) m_player.hiScore[WALK] = m_player.score[WALK];
+
+			for (int i = 0; i < STEP + 1; i++) m_player.score[i] = 0;
+			for (int i = 0; i < BG_MS2 + 1; i++) BG_MS_Flag[i] = true;
+
+			state = TITLE;
+		}
+		else if (CheckHitKey(KEY_INPUT_ESCAPE)) return false;
+
 		break;
 
 	case Error:

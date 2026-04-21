@@ -14,6 +14,8 @@ struct Circle {
 
 struct Player {
 	int* score;
+	int* hiScore;
+
 	int flagSize;
 
 	Circle shape;
@@ -31,8 +33,6 @@ struct Point {
 	Circle shape;
 
 	bool inputFlag;
-
-	Vector2 posData;
 };
 
 struct Box {
@@ -53,11 +53,11 @@ struct Box {
 
 	bool* flag;
 
-	Vector2 posData;
-
 	int* SE;
 
 	bool* SE_Flag;
+
+	int IMG;
 };
 
 struct Wall {
@@ -68,7 +68,7 @@ struct Wall {
 
 	bool flag;
 
-	int drawData;
+	int IMG;
 };
 
 class Game {
@@ -97,11 +97,15 @@ private:
 	Player m_player;
 
 	Box* m_box;
+	Vector2** m_box_Data;
 
 	Wall* m_wall;
+	int** m_wall_DrawData;
+
 	Wall* m_wall_Save;
 
 	Point* m_point;
+	Vector2** m_point_Data;
 
 	//DATA
 	//îzóÒä«óù
@@ -135,7 +139,7 @@ private:
 	const char** m_errorBG_MS;
 
 	enum {
-		BG_MS1 = 1
+		BG_MS1 = 1,BG_MS2 = 2
 	};
 
 	//SE

@@ -23,28 +23,63 @@ void Game::Draw() {
 	case GAME:
 		DrawExtendGraph(0, 0, WIDTH, HEIGHT, BG_IG[BG_IG1], FALSE);
 
-		for (int i = 0; i < m_line[stage].x; i++) if (i != 0) DrawLine(0, i * (HEIGHT / m_line[stage].y), WIDTH, i * (HEIGHT / m_line[stage].y), color[WHITE]);
-		for (int i = 0; i < m_line[stage].y; i++) if (i != 0) DrawLine(i * (WIDTH / m_line[stage].x), 0, i * (WIDTH / m_line[stage].x), HEIGHT, color[WHITE]);
+		//for (int i = 0; i < m_line[stage].x; i++) if (i != 0) DrawLine(0, i * (HEIGHT / m_line[stage].y), WIDTH, i * (HEIGHT / m_line[stage].y), color[WHITE]);
+		//for (int i = 0; i < m_line[stage].y; i++) if (i != 0) DrawLine(i * (WIDTH / m_line[stage].x), 0, i * (WIDTH / m_line[stage].x), HEIGHT, color[WHITE]);
 
 		for (int i = 0; i < wallSize[stage]; i++) {
-			if (m_wall[i].flag) DrawBox(m_wall[i].pos.x - m_wall[i].length.x / 2, m_wall[i].pos.y - m_wall[i].length.y / 2,
-				m_wall[i].pos.x + m_wall[i].length.x / 2, m_wall[i].pos.y + m_wall[i].length.y / 2, m_wall[i].color, TRUE);
-		}
-
-		for (int i = 0; i < boxSize[stage]; i++) {
-			DrawBox(m_box[i].pos.x - m_box[i].length.x / 2, m_box[i].pos.y - m_box[i].length.y / 2,
-				m_box[i].pos.x + m_box[i].length.x / 2, m_box[i].pos.y + m_box[i].length.y / 2, m_box[i].color, TRUE);
+			if (m_wall[i].flag) DrawExtendGraph(m_wall[i].pos.x - m_wall[i].length.x / 2, m_wall[i].pos.y - m_wall[i].length.y / 2,
+				m_wall[i].pos.x + m_wall[i].length.x / 2, m_wall[i].pos.y + m_wall[i].length.y / 2, m_wall[i].IMG, FALSE);
 		}
 
 		for (int i = 0; i < boxSize[stage]; i++) {
 			DrawCircle(m_point[i].shape.pos.x, m_point[i].shape.pos.y, m_point[i].shape.radius, m_point[i].shape.color, TRUE);
 		}
 
+		for (int i = 0; i < boxSize[stage]; i++) {
+			DrawExtendGraph(m_box[i].pos.x - m_box[i].length.x / 2, m_box[i].pos.y - m_box[i].length.y / 2,
+				m_box[i].pos.x + m_box[i].length.x / 2, m_box[i].pos.y + m_box[i].length.y / 2, m_box[i].IMG, FALSE);		
+		}
+
 		DrawCircle(m_player.shape.pos.x, m_player.shape.pos.y, m_player.shape.radius, m_player.shape.color, TRUE);
 
 		SetFontSize(60);
+		DrawFormatString(0, 0, color[BLACK], "STAGE%d", stage + 1);
+
 		DrawFormatString(0, HEIGHT - 60, color[BLUE], "STEP:%d", m_player.score[STEP]);
 		DrawFormatString(WIDTH - 400, HEIGHT - 60, color[YELLOW], "SCORE:%d", m_player.score[WALK]);
+
+		SetFontSize(40);
+		DrawString(WIDTH - 320, 10, "Rキーでリセット", color[BLACK]);
+		break;
+
+	case RESULT:
+		timer++;
+
+		DrawExtendGraph(0, 0, WIDTH, HEIGHT, BG_IG[TITLE], FALSE);
+
+		SetFontSize(120);
+		DrawFormatString(0, 60, color[BLUE], "STEP:%d", m_player.score[STEP]);
+
+		if (m_player.score[STEP] < m_player.hiScore[STEP]) {
+			SetFontSize(50);
+			if (timer % 30 <= 15) DrawString(WIDTH / 2 + 100, 100, "NEW RECORD", color[RED]);
+
+			SetFontSize(120);
+		}
+
+		DrawFormatString(0, 250, color[YELLOW], "SCORE:%d", m_player.score[WALK]);
+
+		if (m_player.score[WALK] < m_player.hiScore[WALK]) {
+			SetFontSize(50);
+			if (timer % 30 <= 15) DrawString(WIDTH / 2 + 100, 300, "NEW RECORD", color[RED]);
+		}
+
+		SetFontSize(50);
+		DrawString(0, HEIGHT - 250, "Rキーでリトライ : ENTERキーでタイトルへ", color[BLACK]);
+
+		SetFontSize(100);
+		DrawString(0, HEIGHT - 100, "ESCAPEキーで終了", color[BLACK]);
+
 		break;
 
 	case Error:
@@ -144,9 +179,11 @@ void Game::Draw() {
 //	DrawFormatString(170, 20 * i + 20 + 60 * i, color[BLUE], "%d番目:SAVE_WALL_X:%d", i, m_wall_Save[i].pos.x);
 //	DrawFormatString(170, 20 * i + 40 + 60 * i, color[BLUE], "%d番目:SAVE_WALL_Y:%d", i, m_wall_Save[i].pos.y);
 //}
-//DrawFormatString(500, 20 * i + 140 * i, color[BLUE], "%d番目:BOX_SAVEPOS_X:%d", i, m_box[i].savePos.x);
+//if (m_box[i].flag[PLAYERCOLLISION]) {
+//	SetFontSize(20);
+// 	DrawFormatString(0, 0, color[RED], "%d番目:BOX_PLAYER:%d", i, (int)m_box[i].flag[BOX_BOXCOLLISION]);
+//}
 //DrawFormatString(500, 20 * i + 20 + 140 * i, color[BLUE], "%d番目:BOX_SAVEPOS_Y:%d", i, m_box[i].savePos.y);
-//DrawFormatString(500, 20 * i + 40 + 140 * i, color[RED], "%d番目:BOX_PLAYER:%d", i, (int)m_box[i].flag[PLAYERCOLLISION]);
 //DrawFormatString(500, 20 * i + 60 + 140 * i, color[RED], "%d番目:BOX_BOX:%d", i, (int)m_box[i].flag[BOX_BOXCOLLISION]);
 //DrawFormatString(500, 20 * i + 80 + 140 * i, color[RED], "%d番目:BOX_MOVE:%d", i, (int)m_box[i].flag[MOVE]);
 //DrawFormatString(500, 20 * i + 100 + 140 * i, color[RED], "%d番目:BOX_COURSE:%d", i, (int)m_box[i].flag[COURSE]);

@@ -210,9 +210,13 @@ void Game::Judge(bool direction, int value) {
 								if (!m_player.flag[WALLCOLLISION]) {
 									m_wall_Save[i].flag = false;
 
+									if(m_box[i].pos.x == m_box[i].savePos.x + WIDTH / m_line[stage].x * value)
 									m_box[i].savePos.x = m_box[i].savePos.x + WIDTH / m_line[stage].x * value;
 
 									wallSaveFlag = false;
+								}
+								else {
+
 								}
 							}
 						}
@@ -330,7 +334,6 @@ void Game::Judge(bool direction, int value) {
 								}
 							}
 						}
-
 						m_box[i].flag[MOVE] = true;
 					}
 
