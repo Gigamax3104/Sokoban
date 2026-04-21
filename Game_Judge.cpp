@@ -125,7 +125,6 @@ void Game::Judge(bool direction, int value) {
 								//もしプレイヤー接続フラグが成立の場合は、不成立にさせる。
 								if (m_box[j].flag[PLAYERCOLLISION]) {
 									m_box[j].flag[PLAYERCOLLISION] = false;
-									m_box[i].flag[MOVE] = true;
 								}
 							}
 
@@ -159,7 +158,6 @@ void Game::Judge(bool direction, int value) {
 									//プレイヤーの壁接続フラグを不成立にさせる。
 									m_player.flag[WALLCOLLISION] = false;
 
-									m_box[i].flag[MOVE] = true;
 
 									//壁保存フラグを不成立にさせる。
 									m_wall_Save[i].flag = false;
@@ -176,7 +174,6 @@ void Game::Judge(bool direction, int value) {
 							else {
 								//プレイヤーの壁接続フラグを不成立にさせる。
 								m_player.flag[WALLCOLLISION] = false;
-								m_box[i].flag[MOVE] = true;
 
 								for (int j = 0; j < boxSize[stage] * wallSize[stage]; j++) {
 
@@ -197,7 +194,6 @@ void Game::Judge(bool direction, int value) {
 
 														//プレイヤーの壁接続フラグを不成立にさせる。
 														m_player.flag[WALLCOLLISION] = false;
-														m_box[i].flag[MOVE] = true;
 													}
 												}
 											}
@@ -252,7 +248,6 @@ void Game::Judge(bool direction, int value) {
 
 											//箱の箱接続フラグを不成立にさせる。
 											m_box[i].flag[BOX_BOXCOLLISION] = false;
-											m_box[i].flag[MOVE] = true;
 
 										}
 
@@ -263,7 +258,6 @@ void Game::Judge(bool direction, int value) {
 									//※2でない時、箱の箱接続フラグを不成立にさせる。。
 									else {
 										m_box[i].flag[BOX_BOXCOLLISION] = false;
-										m_box[i].flag[MOVE] = true;
 									}
 								}
 								else if(m_box[i].savePos.x + WIDTH / m_line[stage].x * value == m_box[j].pos.x
@@ -280,7 +274,6 @@ void Game::Judge(bool direction, int value) {
 
 								//動作フラグと箱の箱接続フラグと箱の移動方向を左右にさせ、入力フラグを右の時は成立、
 								// 左の時は不成立にさせ、保存距離をなくし、関数を抜ける。
-								m_box[i].flag[MOVE] = true;
 								m_box[i].flag[BOX_BOXCOLLISION] = false;
 
 								m_box[i].flag[COURSE] = false;
@@ -334,7 +327,6 @@ void Game::Judge(bool direction, int value) {
 								}
 							}
 						}
-						m_box[i].flag[MOVE] = true;
 					}
 
 					//プレイヤーの箱接続フラグが不成立の時、またはプレイヤーの壁接続フラグが成立の時、抜ける。
@@ -429,7 +421,6 @@ void Game::Judge(bool direction, int value) {
 
 						if (value == OPPOSITION && m_box[i].savePos.y + HEIGHT / m_line[stage].y * value <= 0
 							|| value == NORMAL && m_box[i].savePos.y + HEIGHT / m_line[stage].y * value >= HEIGHT)
-							m_box[i].flag[MOVE] = false;
 
 						if ((m_player.flag[INPUT] && m_player.shape.pos.y + m_player.speed.y * value < save)
 							|| !m_player.flag[INPUT] && m_player.shape.pos.y + m_player.speed.y * value > save
@@ -439,7 +430,6 @@ void Game::Judge(bool direction, int value) {
 							for (int j = 0; j < boxSize[stage]; j++) {
 								if (m_box[j].flag[PLAYERCOLLISION]) {
 									m_box[j].flag[PLAYERCOLLISION] = false;
-									m_box[i].flag[MOVE] = true;
 								}
 							}
 
@@ -463,7 +453,6 @@ void Game::Judge(bool direction, int value) {
 								if (m_box[i].pos.x != m_wall_Save[i].pos.x && m_box[i].savePos.y + HEIGHT / m_line[stage].y * value + m_player.speed.y == m_wall_Save[i].pos.y
 									|| m_box[i].pos.x != m_wall_Save[i].pos.x && m_box[i].savePos.y + HEIGHT / m_line[stage].y * value + m_player.speed.y != m_wall_Save[i].pos.y) {
 									m_player.flag[WALLCOLLISION] = false;
-									m_box[i].flag[MOVE] = true;
 
 									m_wall_Save[i].flag = false;
 
@@ -474,7 +463,6 @@ void Game::Judge(bool direction, int value) {
 							}
 							else {
 								m_player.flag[WALLCOLLISION] = false;
-								m_box[i].flag[MOVE] = true;
 
 								m_box[i].savePos.y = m_box[i].savePos.y + HEIGHT / m_line[stage].y * value;
 
@@ -503,7 +491,6 @@ void Game::Judge(bool direction, int value) {
 													|| m_box[i].pos.x - m_box[j].pos.x != 0 && m_box[i].pos.y - m_box[j].pos.y != 0
 														|| m_box[i].pos.x - m_box[j].pos.x != 0 && m_box[i].pos.y - m_box[j].pos.y == 0) {
 												m_box[i].flag[BOX_BOXCOLLISION] = false;
-												m_box[i].flag[MOVE] = true;
 											}
 										}
 
@@ -512,7 +499,6 @@ void Game::Judge(bool direction, int value) {
 									}
 									else {
 										m_box[i].flag[BOX_BOXCOLLISION] = false;
-										m_box[i].flag[MOVE] = true;
 									}
 								}
 							}
@@ -521,7 +507,6 @@ void Game::Judge(bool direction, int value) {
 						for (int i = 0; i < boxSize[stage]; i++) {
 							if (m_box[i].flag[BOX_BOXCOLLISION]) {
 								m_box[i].flag[COURSE] = true;
-								m_box[i].flag[MOVE] = true;
 
 								if (value == NORMAL) m_box[i].flag[INPUT] = true;
 								else m_box[i].flag[INPUT] = false;
@@ -560,7 +545,6 @@ void Game::Judge(bool direction, int value) {
 							}
 						}
 
-						m_box[i].flag[MOVE] = true;
 					}
 
 					if (!m_player.flag[BOXCOLLISION] || m_player.flag[WALLCOLLISION]) break;
